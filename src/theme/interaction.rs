@@ -99,6 +99,7 @@ fn trigger_interaction_sound_effect(
                 settings: PlaybackSettings::DESPAWN,
             },
             SoundEffect,
+            Name::from("Button Sound"),
         ));
     }
 }

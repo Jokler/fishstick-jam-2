@@ -51,6 +51,7 @@ fn play_gameplay_music(mut commands: Commands, mut music: ResMut<GameplayMusic>)
                     settings: PlaybackSettings::LOOP,
                 },
                 Music,
+                Name::from("Gameplay Music"),
             ))
             .id(),
     );

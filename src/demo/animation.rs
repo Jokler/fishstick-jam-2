@@ -88,6 +88,7 @@ fn trigger_step_sound_effect(
                     settings: PlaybackSettings::DESPAWN,
                 },
                 SoundEffect,
+                Name::from("Step Sound"),
             ));
         }
     }
@@ -103,7 +104,7 @@ pub struct PlayerAnimation {
     state: PlayerAnimationState,
 }
 
-#[derive(Reflect, PartialEq)]
+#[derive(Debug, Reflect, PartialEq)]
 pub enum PlayerAnimationState {
     Idling,
     Walking,

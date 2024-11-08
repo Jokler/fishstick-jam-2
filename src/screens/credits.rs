@@ -61,6 +61,7 @@ fn play_credits_music(mut commands: Commands, mut music: ResMut<CreditsMusic>) {
                     settings: PlaybackSettings::LOOP,
                 },
                 Music,
+                Name::from("Credits Music"),
             ))
             .id(),
     );
