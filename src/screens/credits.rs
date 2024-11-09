@@ -21,10 +21,6 @@ fn spawn_credits_screen(mut commands: Commands) {
             children.label("Jokler - Code");
             children.label("masha - Design");
 
-            children.header("Assets");
-            children.label("Bevy logo - All rights reserved by the Bevy Foundation. Permission granted for splash screen use when unmodified.");
-            children.label("Button SFX - CC0 by Jaszunio15");
-
             children.button("Back").observe(enter_title_screen);
         });
 }

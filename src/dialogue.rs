@@ -28,6 +28,7 @@ pub(super) fn plugin(app: &mut App) {
             YarnFileSource::file("dialogue/papyrus.yarn"),
             YarnFileSource::file("dialogue/papyrus_strips.yarn"),
             YarnFileSource::file("dialogue/woven_papyrus.yarn"),
+            YarnFileSource::file("dialogue/paper.yarn"),
             YarnFileSource::file("dialogue/dino.yarn"),
             YarnFileSource::file("dialogue/banan.yarn"),
         ]),
