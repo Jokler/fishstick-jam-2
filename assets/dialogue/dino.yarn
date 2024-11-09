@@ -1,0 +1,10 @@
+title: Dino
+---
+<<drop WovenPapyrus>>
+Oh no, I dropped it!!
+<<spawn_dino>>
+<<wait 1.5>>
+<<level_convert WovenPapyrus Paper>>
+<<wait 1.5>>
+Thank god it just passed by!
+===

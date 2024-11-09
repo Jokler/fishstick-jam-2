@@ -1,0 +1,10 @@
+title: Wife
+---
+<<if $_has_PapyrusStrips>>
+    Wife: What's that?
+    Wife: Can I have it for a moment?
+    <<inventory_convert PapyrusStrips WovenPapyrus>>
+<<else>>
+    Mah wife!
+<<endif>>
+===

@@ -7,10 +7,13 @@ mod splash;
 mod title;
 
 use bevy::prelude::*;
+use derive_more::derive::Display;
 
 pub(super) fn plugin(app: &mut App) {
     app.init_state::<Screen>();
+    app.add_sub_state::<Area>();
     app.enable_state_scoped_entities::<Screen>();
+    app.enable_state_scoped_entities::<Area>();
 
     app.add_plugins((
         credits::plugin,
@@ -24,10 +27,19 @@ pub(super) fn plugin(app: &mut App) {
 /// The game's main screen states.
 #[derive(States, Debug, Hash, PartialEq, Eq, Clone, Default)]
 pub enum Screen {
-    #[default]
+    // TODO: Splash screen?
     Splash,
+    #[default]
     Loading,
     Title,
     Credits,
     Gameplay,
+}
+
+#[derive(SubStates, Debug, Hash, PartialEq, Eq, Clone, Default, Display)]
+#[source(Screen = Screen::Gameplay)]
+pub enum Area {
+    #[default]
+    Cave,
+    Outside,
 }

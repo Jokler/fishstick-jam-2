@@ -1,16 +1,10 @@
-//! Player sprite animation.
-//! This is based on multiple examples and may be very different for your game.
-//! - [Sprite flipping](https://github.com/bevyengine/bevy/blob/latest/examples/2d/sprite_flipping.rs)
-//! - [Sprite animation](https://github.com/bevyengine/bevy/blob/latest/examples/2d/sprite_animation.rs)
-//! - [Timers](https://github.com/bevyengine/bevy/blob/latest/examples/time/timers.rs)
-
 use bevy::prelude::*;
 use rand::prelude::*;
 use std::time::Duration;
 
 use crate::{
     audio::SoundEffect,
-    demo::{movement::MovementController, player::PlayerAssets},
+    game::{movement::MovementController, player::PlayerAssets},
     AppSet,
 };
 
@@ -68,8 +62,6 @@ fn update_animation_atlas(mut query: Query<(&PlayerAnimation, &mut TextureAtlas)
     }
 }
 
-/// If the player is moving, play a step sound effect synchronized with the
-/// animation.
 fn trigger_step_sound_effect(
     mut commands: Commands,
     player_assets: Res<PlayerAssets>,
@@ -94,8 +86,6 @@ fn trigger_step_sound_effect(
     }
 }
 
-/// Component that tracks player's animation state.
-/// It is tightly bound to the texture atlas we use.
 #[derive(Component, Reflect)]
 #[reflect(Component)]
 pub struct PlayerAnimation {
@@ -114,11 +104,11 @@ impl PlayerAnimation {
     /// The number of idle frames.
     const IDLE_FRAMES: usize = 2;
     /// The duration of each idle frame.
-    const IDLE_INTERVAL: Duration = Duration::from_millis(500);
+    const IDLE_INTERVAL: Duration = Duration::from_millis(200);
     /// The number of walking frames.
-    const WALKING_FRAMES: usize = 6;
+    const WALKING_FRAMES: usize = 2;
     /// The duration of each walking frame.
-    const WALKING_INTERVAL: Duration = Duration::from_millis(50);
+    const WALKING_INTERVAL: Duration = Duration::from_millis(100);
 
     fn idling() -> Self {
         Self {
@@ -160,6 +150,7 @@ impl PlayerAnimation {
                 PlayerAnimationState::Idling => *self = Self::idling(),
                 PlayerAnimationState::Walking => *self = Self::walking(),
             }
+            self.update_timer(self.timer.remaining());
         }
     }
 
@@ -172,7 +163,7 @@ impl PlayerAnimation {
     pub fn get_atlas_index(&self) -> usize {
         match self.state {
             PlayerAnimationState::Idling => self.frame,
-            PlayerAnimationState::Walking => 6 + self.frame,
+            PlayerAnimationState::Walking => 2 + self.frame,
         }
     }
 }

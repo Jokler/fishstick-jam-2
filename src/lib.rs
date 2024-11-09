@@ -1,8 +1,9 @@
 mod asset_tracking;
 pub mod audio;
-mod demo;
 #[cfg(feature = "dev")]
 mod dev_tools;
+mod dialogue;
+mod game;
 mod screens;
 mod theme;
 
@@ -11,21 +12,19 @@ use bevy::{
     audio::{AudioPlugin, Volume},
     prelude::*,
 };
+use bevy_tweening::TweeningPlugin;
 
 pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        // Order new `AppStep` variants by adding them here:
         app.configure_sets(
             Update,
             (AppSet::TickTimers, AppSet::RecordInput, AppSet::Update).chain(),
         );
 
-        // Spawn the main camera.
         app.add_systems(Startup, spawn_camera);
 
-        // Add Bevy plugins.
         app.add_plugins(
             DefaultPlugins
                 .set(AssetPlugin {
@@ -41,6 +40,7 @@ impl Plugin for AppPlugin {
                         canvas: Some("#bevy".to_string()),
                         fit_canvas_to_parent: true,
                         prevent_default_event_handling: true,
+                        resizable: false,
                         ..default()
                     }
                     .into(),
@@ -48,18 +48,21 @@ impl Plugin for AppPlugin {
                 })
                 .set(AudioPlugin {
                     global_volume: GlobalVolume {
-                        volume: Volume::new(0.3),
+                        // FIXME: Increase again
+                        volume: Volume::new(0.0),
                     },
                     ..default()
                 }),
         );
 
-        // Add other plugins.
+        app.add_plugins(TweeningPlugin);
+
         app.add_plugins((
             asset_tracking::plugin,
-            demo::plugin,
+            game::plugin,
             screens::plugin,
             theme::plugin,
+            dialogue::plugin,
         ));
 
         // Enable dev tools for dev builds.

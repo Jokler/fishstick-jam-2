@@ -6,9 +6,12 @@
 use bevy::prelude::*;
 
 mod animation;
+pub mod dino;
+pub mod inventory;
 pub mod level;
-mod movement;
+pub mod movement;
 pub mod player;
+mod wife;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((
@@ -16,5 +19,8 @@ pub(super) fn plugin(app: &mut App) {
         movement::plugin,
         player::plugin,
         level::plugin,
+        inventory::plugin,
+        wife::plugin,
+        dino::plugin,
     ));
 }

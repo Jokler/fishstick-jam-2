@@ -18,8 +18,8 @@ fn spawn_credits_screen(mut commands: Commands) {
         .insert(StateScoped(Screen::Credits))
         .with_children(|children| {
             children.header("Made by");
-            children.label("Joe Shmoe - Implemented aligator wrestling AI");
-            children.label("Jane Doe - Made the music for the alien invasion");
+            children.label("Jokler - Code/Design");
+            children.label("masha - Design");
 
             children.header("Assets");
             children.label("Bevy logo - All rights reserved by the Bevy Foundation. Permission granted for splash screen use when unmodified.");
