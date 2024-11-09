@@ -81,7 +81,3 @@ fn stop_ambience(mut commands: Commands, mut music: ResMut<GameplayMusic>) {
         commands.entity(entity).despawn_recursive();
     }
 }
-
-fn return_to_title_screen(mut next_screen: ResMut<NextState<Screen>>) {
-    next_screen.set(Screen::Title);
-}

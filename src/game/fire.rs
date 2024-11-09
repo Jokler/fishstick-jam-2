@@ -9,11 +9,7 @@ use bevy::{
     render::texture::{ImageLoaderSettings, ImageSampler},
 };
 
-use crate::{
-    asset_tracking::LoadResource,
-    game::animation::Animation,
-    screens::{Area, Screen},
-};
+use crate::{asset_tracking::LoadResource, game::animation::Animation, screens::Area};
 
 use super::animation::{AnimationData, AnimationState};
 

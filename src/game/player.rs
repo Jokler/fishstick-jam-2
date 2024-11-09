@@ -195,7 +195,7 @@ impl FromWorld for PlayerAssets {
     }
 }
 
-#[derive(Component, Debug, Reflect)]
+#[derive(Component, Debug)]
 pub struct AutoRunner {
     pub start: Instant,
     pub time: Duration,
