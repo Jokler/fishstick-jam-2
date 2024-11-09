@@ -2122,21 +2122,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fishstick-jam-2"
-version = "0.3.0"
-dependencies = [
- "bevy",
- "bevy-inspector-egui",
- "bevy_tweening",
- "bevy_yarnspinner",
- "bevy_yarnspinner_example_dialogue_view",
- "derive_more",
- "log",
- "rand",
- "tracing",
-]
-
-[[package]]
 name = "fixed_decimal"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4307,6 +4292,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "thanks-wife"
+version = "0.3.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "bevy_tweening",
+ "bevy_yarnspinner",
+ "bevy_yarnspinner_example_dialogue_view",
+ "derive_more",
+ "log",
+ "rand",
+ "tracing",
 ]
 
 [[package]]
