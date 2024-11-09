@@ -9,6 +9,9 @@ pub trait Widgets {
     /// Spawn a simple button with text.
     fn button(&mut self, text: impl Into<String>) -> EntityCommands;
 
+    /// Spawn a simple button with image.
+    fn inventory_item(&mut self, image: Handle<Image>) -> EntityCommands;
+
     /// Spawn a simple header label. Bigger than [`Widgets::label`].
     fn header(&mut self, text: impl Into<String>) -> EntityCommands;
 
@@ -48,6 +51,43 @@ impl<T: Spawn> Widgets for T {
                         ..default()
                     },
                 ),
+            ));
+        });
+
+        entity
+    }
+
+    fn inventory_item(&mut self, image: Handle<Image>) -> EntityCommands {
+        let mut entity = self.spawn((
+            Name::new("Button"),
+            ButtonBundle {
+                style: Style {
+                    width: Px(60.0),
+                    height: Px(60.0),
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },
+                background_color: BackgroundColor(ITEM_NODE_BACKGROUND),
+                ..default()
+            },
+            InteractionPalette {
+                none: ITEM_NODE_BACKGROUND,
+                hovered: ITEM_HOVERED_BACKGROUND,
+                pressed: ITEM_PRESSED_BACKGROUND,
+            },
+        ));
+        entity.with_children(|children| {
+            children.spawn((
+                Name::new("Button Image"),
+                NodeBundle {
+                    style: Style {
+                        width: Val::Px(50.0),
+                        // height: Val::Px(50.0),
+                        ..default()
+                    },
+                    ..default()
+                },
+                UiImage::new(image),
             ));
         });
 
@@ -138,12 +178,10 @@ impl Containers for Commands<'_, '_> {
             Name::new("Inventory Root"),
             NodeBundle {
                 style: Style {
-                    width: Px(200.0),
-                    height: Percent(100.0),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Px(10.0),
+                    flex_direction: FlexDirection::Row,
+                    column_gap: Px(5.0),
                     position_type: PositionType::Absolute,
                     ..default()
                 },

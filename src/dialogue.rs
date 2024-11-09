@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use bevy::prelude::*;
 use bevy_yarnspinner::{
     events::DialogueCompleteEvent,
@@ -6,11 +8,13 @@ use bevy_yarnspinner::{
 use bevy_yarnspinner_example_dialogue_view::ExampleYarnSpinnerDialogueViewPlugin;
 
 use crate::{
+    audio::SoundEffect,
     game::{
         dino::SpawnDino,
         inventory::{Inventory, Item},
         level::Level,
         movement::ActionsFrozen,
+        player::{AutoRunner, Player, PlayerAssets},
     },
     screens::Screen,
 };
@@ -25,6 +29,7 @@ pub(super) fn plugin(app: &mut App) {
             YarnFileSource::file("dialogue/papyrus_strips.yarn"),
             YarnFileSource::file("dialogue/woven_papyrus.yarn"),
             YarnFileSource::file("dialogue/dino.yarn"),
+            YarnFileSource::file("dialogue/banan.yarn"),
         ]),
         ExampleYarnSpinnerDialogueViewPlugin::new(),
     ));
@@ -43,12 +48,16 @@ fn spawn_dialogue_runner(
         .add_command("inventory_convert", inventory_convert)
         .add_command("level_convert", level_convert)
         .add_command("drop", drop)
-        .add_command("spawn_dino", spawn_dino);
+        .add_command("spawn_dino", spawn_dino)
+        .add_command("player_run", player_run)
+        .add_command("play_sound", play_sound);
 
     fn inventory_convert(
         In((from, to)): In<(String, String)>,
+        mut commands: Commands,
         mut dialogue_runner: Query<&mut DialogueRunner>,
         mut inventory: ResMut<Inventory>,
+        player_assets: Res<PlayerAssets>,
     ) {
         let index = inventory
             .items
@@ -65,6 +74,15 @@ fn spawn_dialogue_runner(
 
         vars.set(format!("$_has_{}", from), false.into()).unwrap();
         vars.set(format!("$_has_{}", to), true.into()).unwrap();
+
+        commands.spawn((
+            AudioBundle {
+                source: player_assets.item_pickup.clone(),
+                settings: PlaybackSettings::DESPAWN,
+            },
+            SoundEffect,
+            Name::from("Convert sound"),
+        ));
     }
 
     fn level_convert(In((from, to)): In<(String, String)>, mut level: ResMut<Level>) {
@@ -79,9 +97,11 @@ fn spawn_dialogue_runner(
 
     fn drop(
         In(item): In<String>,
+        mut commands: Commands,
         mut dialogue_runner: Query<&mut DialogueRunner>,
         mut inventory: ResMut<Inventory>,
         mut level: ResMut<Level>,
+        player_assets: Res<PlayerAssets>,
     ) {
         let index = inventory
             .items
@@ -97,10 +117,54 @@ fn spawn_dialogue_runner(
         let vars = dialogue_runner.variable_storage_mut();
 
         vars.set(format!("$_has_{}", item), false.into()).unwrap();
+
+        commands.spawn((
+            AudioBundle {
+                source: player_assets.item_pickup.clone(),
+                settings: PlaybackSettings::DESPAWN,
+            },
+            SoundEffect,
+            Name::from("Convert sound"),
+        ));
+    }
+
+    fn player_run(
+        In((direction, time)): In<(String, u64)>,
+        mut commands: Commands,
+        player: Query<Entity, With<Player>>,
+    ) {
+        let intent = match direction.as_str() {
+            "left" => Vec2::new(-1.0, 0.0),
+            "right" => Vec2::new(1.0, 0.0),
+            _ => panic!("unknown direction {direction}"),
+        };
+        let entity = player.get_single().expect("exactly one player");
+        commands.entity(entity).insert(AutoRunner {
+            start: Instant::now(),
+            time: Duration::from_millis(time),
+            intent,
+        });
     }
 
     fn spawn_dino(In(()): In<()>, mut commands: Commands) {
         commands.trigger(SpawnDino);
+    }
+
+    fn play_sound(In(name): In<String>, mut commands: Commands, player_assets: Res<PlayerAssets>) {
+        let sound = match name.as_str() {
+            "vine_boom" => player_assets.vine_boom.clone(),
+            "uh_oh" => player_assets.uh_oh.clone(),
+            "trophy_wife" => player_assets.trophy_wife.clone(),
+            _ => panic!("unknown sound {name}"),
+        };
+        commands.spawn((
+            AudioBundle {
+                source: sound,
+                settings: PlaybackSettings::DESPAWN,
+            },
+            SoundEffect,
+            Name::from(format!("{name} sound")),
+        ));
     }
 
     dialogue_runner.start_node("Intro");

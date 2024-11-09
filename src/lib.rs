@@ -11,6 +11,7 @@ use bevy::{
     asset::AssetMetaCheck,
     audio::{AudioPlugin, Volume},
     prelude::*,
+    window::WindowResolution,
 };
 use bevy_tweening::TweeningPlugin;
 
@@ -41,6 +42,7 @@ impl Plugin for AppPlugin {
                         fit_canvas_to_parent: true,
                         prevent_default_event_handling: true,
                         resizable: false,
+                        resolution: WindowResolution::default().with_scale_factor_override(1.0),
                         ..default()
                     }
                     .into(),
@@ -49,7 +51,7 @@ impl Plugin for AppPlugin {
                 .set(AudioPlugin {
                     global_volume: GlobalVolume {
                         // FIXME: Increase again
-                        volume: Volume::new(0.0),
+                        volume: Volume::new(0.3),
                     },
                     ..default()
                 }),

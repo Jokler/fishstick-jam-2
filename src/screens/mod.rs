@@ -39,7 +39,7 @@ pub enum Screen {
 #[derive(SubStates, Debug, Hash, PartialEq, Eq, Clone, Default, Display)]
 #[source(Screen = Screen::Gameplay)]
 pub enum Area {
-    #[default]
     Cave,
+    #[default]
     Outside,
 }

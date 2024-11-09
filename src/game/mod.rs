@@ -7,6 +7,7 @@ use bevy::prelude::*;
 
 mod animation;
 pub mod dino;
+pub mod fire;
 pub mod inventory;
 pub mod level;
 pub mod movement;
@@ -22,5 +23,6 @@ pub(super) fn plugin(app: &mut App) {
         inventory::plugin,
         wife::plugin,
         dino::plugin,
+        fire::plugin,
     ));
 }

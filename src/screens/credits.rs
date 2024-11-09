@@ -18,14 +18,12 @@ fn spawn_credits_screen(mut commands: Commands) {
         .insert(StateScoped(Screen::Credits))
         .with_children(|children| {
             children.header("Made by");
-            children.label("Jokler - Code/Design");
+            children.label("Jokler - Code");
             children.label("masha - Design");
 
             children.header("Assets");
             children.label("Bevy logo - All rights reserved by the Bevy Foundation. Permission granted for splash screen use when unmodified.");
-            children.label("Ducky sprite - CC0 by Caz Creates Games");
             children.label("Button SFX - CC0 by Jaszunio15");
-            children.label("Music - CC BY 3.0 by Kevin MacLeod");
 
             children.button("Back").observe(enter_title_screen);
         });
@@ -46,7 +44,7 @@ impl FromWorld for CreditsMusic {
     fn from_world(world: &mut World) -> Self {
         let assets = world.resource::<AssetServer>();
         Self {
-            music: assets.load("audio/music/Monkeys Spinning Monkeys.ogg"),
+            music: assets.load("audio/music/credits.ogg"),
             entity: None,
         }
     }

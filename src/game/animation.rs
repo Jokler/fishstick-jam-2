@@ -10,7 +10,7 @@ use crate::{
 
 pub(super) fn plugin(app: &mut App) {
     // Animate and play sound effects based on controls.
-    app.register_type::<PlayerAnimation>();
+    app.register_type::<Animation>();
     app.add_systems(
         Update,
         (
@@ -29,7 +29,7 @@ pub(super) fn plugin(app: &mut App) {
 
 /// Update the sprite direction and animation state (idling/walking).
 fn update_animation_movement(
-    mut player_query: Query<(&MovementController, &mut Sprite, &mut PlayerAnimation)>,
+    mut player_query: Query<(&MovementController, &mut Sprite, &mut Animation)>,
 ) {
     for (controller, mut sprite, mut animation) in &mut player_query {
         let dx = controller.intent.x;
@@ -38,23 +38,23 @@ fn update_animation_movement(
         }
 
         let animation_state = if controller.intent == Vec2::ZERO {
-            PlayerAnimationState::Idling
+            AnimationState::Idling
         } else {
-            PlayerAnimationState::Walking
+            AnimationState::Walking
         };
         animation.update_state(animation_state);
     }
 }
 
 /// Update the animation timer.
-fn update_animation_timer(time: Res<Time>, mut query: Query<&mut PlayerAnimation>) {
+fn update_animation_timer(time: Res<Time>, mut query: Query<&mut Animation>) {
     for mut animation in &mut query {
         animation.update_timer(time.delta());
     }
 }
 
 /// Update the texture atlas to reflect changes in the animation.
-fn update_animation_atlas(mut query: Query<(&PlayerAnimation, &mut TextureAtlas)>) {
+fn update_animation_atlas(mut query: Query<(&Animation, &mut TextureAtlas)>) {
     for (animation, mut atlas) in &mut query {
         if animation.changed() {
             atlas.index = animation.get_atlas_index();
@@ -65,10 +65,10 @@ fn update_animation_atlas(mut query: Query<(&PlayerAnimation, &mut TextureAtlas)
 fn trigger_step_sound_effect(
     mut commands: Commands,
     player_assets: Res<PlayerAssets>,
-    mut step_query: Query<&PlayerAnimation>,
+    mut step_query: Query<&Animation>,
 ) {
     for animation in &mut step_query {
-        if animation.state == PlayerAnimationState::Walking
+        if animation.state() == AnimationState::Walking
             && animation.changed()
             && (animation.frame == 2 || animation.frame == 5)
         {
@@ -88,46 +88,35 @@ fn trigger_step_sound_effect(
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]
-pub struct PlayerAnimation {
+pub struct Animation {
     timer: Timer,
     frame: usize,
-    state: PlayerAnimationState,
+    current: usize,
+    animations: Vec<AnimationData>,
 }
 
-#[derive(Debug, Reflect, PartialEq)]
-pub enum PlayerAnimationState {
+#[derive(Reflect)]
+pub struct AnimationData {
+    pub frames: usize,
+    pub interval: Duration,
+    pub state: AnimationState,
+    pub atlas_index: usize,
+}
+
+#[derive(Debug, Reflect, PartialEq, Clone, Copy)]
+pub enum AnimationState {
     Idling,
     Walking,
 }
 
-impl PlayerAnimation {
-    /// The number of idle frames.
-    const IDLE_FRAMES: usize = 2;
-    /// The duration of each idle frame.
-    const IDLE_INTERVAL: Duration = Duration::from_millis(200);
-    /// The number of walking frames.
-    const WALKING_FRAMES: usize = 2;
-    /// The duration of each walking frame.
-    const WALKING_INTERVAL: Duration = Duration::from_millis(100);
-
-    fn idling() -> Self {
+impl Animation {
+    pub fn new(animations: Vec<AnimationData>) -> Self {
         Self {
-            timer: Timer::new(Self::IDLE_INTERVAL, TimerMode::Repeating),
+            timer: Timer::new(animations[0].interval, TimerMode::Repeating),
             frame: 0,
-            state: PlayerAnimationState::Idling,
+            current: 0,
+            animations,
         }
-    }
-
-    fn walking() -> Self {
-        Self {
-            timer: Timer::new(Self::WALKING_INTERVAL, TimerMode::Repeating),
-            frame: 0,
-            state: PlayerAnimationState::Walking,
-        }
-    }
-
-    pub fn new() -> Self {
-        Self::idling()
     }
 
     /// Update animation timers.
@@ -136,20 +125,22 @@ impl PlayerAnimation {
         if !self.timer.finished() {
             return;
         }
-        self.frame = (self.frame + 1)
-            % match self.state {
-                PlayerAnimationState::Idling => Self::IDLE_FRAMES,
-                PlayerAnimationState::Walking => Self::WALKING_FRAMES,
-            };
+        self.frame = (self.frame + 1) % self.animations[self.current].frames;
     }
 
     /// Update animation state if it changes.
-    pub fn update_state(&mut self, state: PlayerAnimationState) {
-        if self.state != state {
-            match state {
-                PlayerAnimationState::Idling => *self = Self::idling(),
-                PlayerAnimationState::Walking => *self = Self::walking(),
-            }
+    pub fn update_state(&mut self, state: AnimationState) {
+        if self.state() != state {
+            self.current = self
+                .animations
+                .iter()
+                .position(|a| a.state == state)
+                .unwrap();
+
+            let data = &self.animations[self.current];
+
+            self.timer = Timer::new(data.interval, TimerMode::Repeating);
+            self.frame = 0;
             self.update_timer(self.timer.remaining());
         }
     }
@@ -159,11 +150,12 @@ impl PlayerAnimation {
         self.timer.finished()
     }
 
+    pub fn state(&self) -> AnimationState {
+        self.animations[self.current].state
+    }
+
     /// Return sprite index in the atlas.
     pub fn get_atlas_index(&self) -> usize {
-        match self.state {
-            PlayerAnimationState::Idling => self.frame,
-            PlayerAnimationState::Walking => 2 + self.frame,
-        }
+        self.animations[self.current].atlas_index + self.frame
     }
 }

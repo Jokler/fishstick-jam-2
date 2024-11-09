@@ -12,13 +12,14 @@ use crate::{asset_tracking::LoadResource, screens::Area};
 use super::{
     inventory::{Inventory, Item},
     movement::ActionsFrozen,
+    player::Player,
 };
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<DinoLeg>();
     app.load_resource::<DinoAssets>();
 
-    app.add_systems(OnEnter(Area::Outside), start_event);
+    app.add_systems(Update, start_event.run_if(in_state(Area::Outside)));
     app.observe(spawn_dino);
 }
 
@@ -26,9 +27,16 @@ fn start_event(
     mut dialogue_runner: Query<&mut DialogueRunner>,
     mut actions_frozen: ResMut<ActionsFrozen>,
     inventory: Res<Inventory>,
+    player: Query<&Transform, With<Player>>,
 ) {
     if !inventory.items.contains(&Item::WovenPapyrus) {
+        // inventory.items.push(Item::WovenPapyrus);
         return;
+    }
+    for transform in &player {
+        if transform.translation.x < -440.0 {
+            return;
+        }
     }
     let mut dialogue_runner = dialogue_runner
         .get_single_mut()
@@ -45,16 +53,16 @@ fn spawn_dino(_: Trigger<SpawnDino>, mut commands: Commands, dino_assets: Res<Di
         EaseFunction::ExponentialIn,
         Duration::from_millis(1500),
         TransformPositionLens {
-            start: Vec3::new(-350.0, 770.0, 1.0),
-            end: Vec3::new(-430.0, 170.0, 0.0),
+            start: Vec3::new(200.0, 770.0, 1.0),
+            end: Vec3::new(-200.0, 238.0, 0.0),
         },
     )
     .then(Tween::new(
         EaseFunction::ExponentialIn,
         Duration::from_millis(1500),
         TransformPositionLens {
-            start: Vec3::new(-430.0, 170.0, 0.0),
-            end: Vec3::new(-470.0, 770.0, 1.0),
+            start: Vec3::new(-200.0, 238.0, 0.0),
+            end: Vec3::new(-400.0, 770.0, 1.0),
         },
     ));
 

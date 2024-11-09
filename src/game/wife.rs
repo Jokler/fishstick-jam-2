@@ -1,6 +1,7 @@
+use std::time::Duration;
+
 use bevy::{
-    color::palettes::css::BLUE,
-    math::bounding::{Aabb2d, BoundingVolume, IntersectsVolume},
+    math::bounding::{Aabb2d, IntersectsVolume},
     prelude::*,
     render::{
         primitives::Aabb,
@@ -9,7 +10,11 @@ use bevy::{
 };
 use bevy_yarnspinner::prelude::DialogueRunner;
 
-use super::{animation::PlayerAnimation, movement::ActionsFrozen, player::Player};
+use super::{
+    animation::{Animation, AnimationData, AnimationState},
+    movement::ActionsFrozen,
+    player::Player,
+};
 use crate::{
     asset_tracking::LoadResource,
     screens::{Area, Screen},
@@ -30,9 +35,21 @@ pub fn spawn_wife(
     player_assets: Res<WifeAssets>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let layout = TextureAtlasLayout::from_grid(UVec2::new(16, 23), 4, 1, None, None);
+    let layout = TextureAtlasLayout::from_grid(
+        UVec2::new(15, 21),
+        4,
+        1,
+        Some(UVec2::splat(2)),
+        Some(UVec2::splat(1)),
+    );
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
-    let player_animation = PlayerAnimation::new();
+    let idle = AnimationData {
+        frames: 2,
+        interval: Duration::from_millis(200),
+        state: AnimationState::Idling,
+        atlas_index: 0,
+    };
+    let player_animation = Animation::new(vec![idle]);
 
     commands.spawn((
         Name::new("Wife"),
@@ -40,7 +57,7 @@ pub fn spawn_wife(
         SpriteBundle {
             texture: player_assets.wife.clone(),
             transform: Transform::from_scale(Vec2::splat(8.0).extend(1.0))
-                .with_translation(Vec3::new(-400.0, -70.0, 0.0)),
+                .with_translation(Vec3::new(-400.0, -78.0, 0.0)),
             ..Default::default()
         },
         TextureAtlas {
@@ -53,7 +70,7 @@ pub fn spawn_wife(
 }
 
 fn talk(
-    mut gizmos: Gizmos,
+    // mut gizmos: Gizmos,
     mut commands: Commands,
     input: Res<ButtonInput<KeyCode>>,
     player: Query<(&Aabb, &Transform), With<Player>>,
@@ -73,7 +90,7 @@ fn talk(
                 item_transform.translation.xy(),
                 item_aabb.half_extents.xy() * item_transform.scale.xy(),
             );
-            gizmos.rect_2d(item_aabb2d.center(), 0., item_aabb2d.half_size() * 2., BLUE);
+            // gizmos.rect_2d(item_aabb2d.center(), 0., item_aabb2d.half_size() * 2., BLUE);
             if player_aabb2d.intersects(&item_aabb2d) {
                 if !input.just_pressed(KeyCode::KeyE) {
                     return;
@@ -116,7 +133,6 @@ impl FromWorld for WifeAssets {
             wife: assets.load_with_settings(
                 WifeAssets::PATH_WIFE,
                 |settings: &mut ImageLoaderSettings| {
-                    // Use `nearest` image sampling to preserve the pixel art style.
                     settings.sampler = ImageSampler::nearest();
                 },
             ),

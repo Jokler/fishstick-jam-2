@@ -1,10 +1,18 @@
 title: Wife
 ---
 <<if $_has_PapyrusStrips>>
+    <<play_sound trophy_wife>>
     Wife: What's that?
     Wife: Can I have it for a moment?
     <<inventory_convert PapyrusStrips WovenPapyrus>>
 <<else>>
     Mah wife!
+    <<if $_has_Knife>>
+        Should I stab her?
+        -> Yes
+            <<play_sound vine_boom>>
+            It would make me feel better but I think I still need her
+        -> Not yet
+    <<endif>>
 <<endif>>
 ===
