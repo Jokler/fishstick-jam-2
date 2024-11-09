@@ -2,7 +2,7 @@
 //! Note that this is separate from the `movement` module as that could be used
 //! for other characters as well.
 
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use bevy::{
     prelude::*,
@@ -197,17 +197,18 @@ impl FromWorld for PlayerAssets {
 
 #[derive(Component, Debug)]
 pub struct AutoRunner {
-    pub start: Instant,
+    pub start_elapsed: Duration,
     pub time: Duration,
     pub intent: Vec2,
 }
 
 fn auto_run(
     mut commands: Commands,
+    time: Res<Time>,
     mut controllers: Query<(Entity, &mut MovementController, &AutoRunner)>,
 ) {
     for (entity, mut controller, runner) in &mut controllers {
-        if runner.start + runner.time < Instant::now() {
+        if runner.start_elapsed + runner.time < time.elapsed() {
             controller.intent = Vec2::ZERO;
             commands.entity(entity).remove::<AutoRunner>();
 

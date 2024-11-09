@@ -1,4 +1,4 @@
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use bevy::prelude::*;
 use bevy_yarnspinner::{
@@ -130,8 +130,9 @@ fn spawn_dialogue_runner(
     }
 
     fn player_run(
-        In((direction, time)): In<(String, u64)>,
+        In((direction, duration)): In<(String, u64)>,
         mut commands: Commands,
+        time: Res<Time>,
         player: Query<Entity, With<Player>>,
     ) {
         let intent = match direction.as_str() {
@@ -141,8 +142,8 @@ fn spawn_dialogue_runner(
         };
         let entity = player.get_single().expect("exactly one player");
         commands.entity(entity).insert(AutoRunner {
-            start: Instant::now(),
-            time: Duration::from_millis(time),
+            start_elapsed: time.elapsed(),
+            time: Duration::from_millis(duration),
             intent,
         });
     }

@@ -43,22 +43,21 @@ pub(super) fn plugin(app: &mut App) {
         (|mut commands: Commands,
           level: Res<Level>,
           items: Query<(Entity, &Item), With<Sprite>>| {
-            for (item, translation) in [(Item::Knife, Vec3::new(130.0, -157.0, -25.0))] {
-                let spawned = items.iter().find(|(_, i)| i == &&item).map(|(e, _)| e);
-                let should_have = level.items.contains(&item);
-                if spawned.is_none() && should_have {
-                    commands.add(move |w: &mut World| {
-                        SpawnItem {
-                            item,
-                            transform: Transform::from_translation(translation)
-                                .with_scale(Vec3::splat(8.0)),
-                        }
-                        .apply(w);
-                    });
-                } else if !should_have {
-                    if let Some(entity) = spawned {
-                        commands.entity(entity).despawn_recursive();
+            let (item, translation) = (Item::Knife, Vec3::new(130.0, -157.0, -25.0));
+            let spawned = items.iter().find(|(_, i)| i == &&item).map(|(e, _)| e);
+            let should_have = level.items.contains(&item);
+            if spawned.is_none() && should_have {
+                commands.add(move |w: &mut World| {
+                    SpawnItem {
+                        item,
+                        transform: Transform::from_translation(translation)
+                            .with_scale(Vec3::splat(8.0)),
                     }
+                    .apply(w);
+                });
+            } else if !should_have {
+                if let Some(entity) = spawned {
+                    commands.entity(entity).despawn_recursive();
                 }
             }
         })
