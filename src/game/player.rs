@@ -179,21 +179,18 @@ impl FromWorld for PlayerAssets {
             caveman: assets.load_with_settings(
                 PlayerAssets::PATH_CAVEMAN,
                 |settings: &mut ImageLoaderSettings| {
-                    // Use `nearest` image sampling to preserve the pixel art style.
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
             healthbar: assets.load_with_settings(
                 PlayerAssets::PATH_HEALTHBAR,
                 |settings: &mut ImageLoaderSettings| {
-                    // Use `nearest` image sampling to preserve the pixel art style.
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
             paper_big: assets.load_with_settings(
                 PlayerAssets::PATH_PAPER_BIG,
                 |settings: &mut ImageLoaderSettings| {
-                    // Use `nearest` image sampling to preserve the pixel art style.
                     settings.sampler = ImageSampler::nearest();
                 },
             ),

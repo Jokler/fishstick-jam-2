@@ -50,7 +50,6 @@ impl Plugin for AppPlugin {
                 })
                 .set(AudioPlugin {
                     global_volume: GlobalVolume {
-                        // FIXME: Increase again
                         volume: Volume::new(0.3),
                     },
                     ..default()

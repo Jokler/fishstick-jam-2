@@ -117,6 +117,7 @@ fn clamp_player_x(
 pub struct ActionsFrozen {
     freeze_count: usize,
 }
+
 impl ActionsFrozen {
     pub fn freeze(&mut self) {
         self.freeze_count += 1;
