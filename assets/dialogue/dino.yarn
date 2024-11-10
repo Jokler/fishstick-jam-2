@@ -1,13 +1,13 @@
 title: Dino
 ---
 <<drop WovenPapyrus>>
-Oh no, I dropped it!!
+Oh no, I drop!!
 <<spawn_dino>>
-<<player_run left 500>>
-<<wait 0.5>>
-<<player_run right 50>>
-<<wait 1.0>>
+<<player_run left -560>>
+<<wait 1.5>>
 <<level_convert WovenPapyrus Paper>>
 <<wait 1.5>>
-Thank god it just passed by!
+Scary dog...
+<<wait 0.5>>
+My plant?
 ===

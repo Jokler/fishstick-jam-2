@@ -1,9 +1,9 @@
 title: Papyrus
 ---
 <<if $_has_Knife>>
-    Mh, I could slice this up...
+    Knife sharp, cut plant.
     <<inventory_convert Papyrus PapyrusStrips>>
 <<else>>
-    I wonder what I could do with this?
+    This is Papyrus Cyperus from Egypt. I totally know what that mean...
 <<endif>>
 ===

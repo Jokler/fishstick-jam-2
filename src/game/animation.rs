@@ -1,12 +1,14 @@
 use bevy::prelude::*;
-use rand::prelude::*;
 use std::time::Duration;
 
 use crate::{
     audio::SoundEffect,
     game::{movement::MovementController, player::PlayerAssets},
+    screens::Area,
     AppSet,
 };
+
+use super::player::Player;
 
 pub(super) fn plugin(app: &mut App) {
     // Animate and play sound effects based on controls.
@@ -22,6 +24,7 @@ pub(super) fn plugin(app: &mut App) {
             )
                 .chain()
                 .run_if(resource_exists::<PlayerAssets>)
+                .run_if(resource_exists::<State<Area>>)
                 .in_set(AppSet::Update),
         ),
     );
@@ -65,23 +68,40 @@ fn update_animation_atlas(mut query: Query<(&Animation, &mut TextureAtlas)>) {
 fn trigger_step_sound_effect(
     mut commands: Commands,
     player_assets: Res<PlayerAssets>,
-    mut step_query: Query<&Animation>,
+    area: Res<State<Area>>,
+    mut step_query: Query<&Animation, With<Player>>,
+    mut last_area: Local<Area>,
+    mut sound_entity: Local<Option<Entity>>,
 ) {
+    if *last_area != *area.get() {
+        if let Some(sound_entity) = sound_entity.take() {
+            commands.entity(sound_entity).despawn_recursive();
+            return;
+        }
+    }
+    *last_area = *area.get();
     for animation in &mut step_query {
-        if animation.state() == AnimationState::Walking
-            && animation.changed()
-            && (animation.frame == 2 || animation.frame == 5)
-        {
-            let rng = &mut rand::thread_rng();
-            let random_step = player_assets.steps.choose(rng).unwrap();
-            commands.spawn((
-                AudioBundle {
-                    source: random_step.clone(),
-                    settings: PlaybackSettings::DESPAWN,
-                },
-                SoundEffect,
-                Name::from("Step Sound"),
-            ));
+        if animation.state() == AnimationState::Walking {
+            if sound_entity.is_some() {
+                continue;
+            }
+            *sound_entity = Some(
+                commands
+                    .spawn((
+                        AudioBundle {
+                            source: match area.get() {
+                                Area::Outside => player_assets.run_outside.clone(),
+                                Area::Cave => player_assets.run_cave.clone(),
+                            },
+                            settings: PlaybackSettings::LOOP,
+                        },
+                        SoundEffect,
+                        Name::from("Step Sound"),
+                    ))
+                    .id(),
+            );
+        } else if let Some(sound_entity) = sound_entity.take() {
+            commands.entity(sound_entity).despawn_recursive();
         }
     }
 }

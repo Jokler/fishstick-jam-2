@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use bevy::prelude::*;
 use bevy_yarnspinner::{
     events::DialogueCompleteEvent,
@@ -31,6 +29,7 @@ pub(super) fn plugin(app: &mut App) {
             YarnFileSource::file("dialogue/paper.yarn"),
             YarnFileSource::file("dialogue/dino.yarn"),
             YarnFileSource::file("dialogue/banan.yarn"),
+            YarnFileSource::file("dialogue/fire.yarn"),
         ]),
         ExampleYarnSpinnerDialogueViewPlugin::new(),
     ));
@@ -51,7 +50,8 @@ fn spawn_dialogue_runner(
         .add_command("drop", drop)
         .add_command("spawn_dino", spawn_dino)
         .add_command("player_run", player_run)
-        .add_command("play_sound", play_sound);
+        .add_command("play_sound", play_sound)
+        .add_command("end_game", end_game);
 
     fn inventory_convert(
         In((from, to)): In<(String, String)>,
@@ -125,14 +125,13 @@ fn spawn_dialogue_runner(
                 settings: PlaybackSettings::DESPAWN,
             },
             SoundEffect,
-            Name::from("Convert sound"),
+            Name::from("Drop sound"),
         ));
     }
 
     fn player_run(
-        In((direction, duration)): In<(String, u64)>,
+        In((direction, end_position)): In<(String, f32)>,
         mut commands: Commands,
-        time: Res<Time>,
         player: Query<Entity, With<Player>>,
     ) {
         let intent = match direction.as_str() {
@@ -142,8 +141,7 @@ fn spawn_dialogue_runner(
         };
         let entity = player.get_single().expect("exactly one player");
         commands.entity(entity).insert(AutoRunner {
-            start_elapsed: time.elapsed(),
-            time: Duration::from_millis(duration),
+            end_position,
             intent,
         });
     }
@@ -152,11 +150,16 @@ fn spawn_dialogue_runner(
         commands.trigger(SpawnDino);
     }
 
+    fn end_game(In(()): In<()>, mut next_state: ResMut<NextState<Screen>>) {
+        next_state.set(Screen::End);
+    }
+
     fn play_sound(In(name): In<String>, mut commands: Commands, player_assets: Res<PlayerAssets>) {
         let sound = match name.as_str() {
             "vine_boom" => player_assets.vine_boom.clone(),
             "uh_oh" => player_assets.uh_oh.clone(),
             "trophy_wife" => player_assets.trophy_wife.clone(),
+            "wife_hm" => player_assets.wife_hm.clone(),
             _ => panic!("unknown sound {name}"),
         };
         commands.spawn((
@@ -170,7 +173,7 @@ fn spawn_dialogue_runner(
     }
 
     dialogue_runner.start_node("Intro");
-    commands.spawn(dialogue_runner);
+    commands.spawn((dialogue_runner, StateScoped(Screen::Gameplay)));
     actions_frozen.freeze();
 }
 

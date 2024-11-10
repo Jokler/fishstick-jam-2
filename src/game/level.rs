@@ -6,7 +6,10 @@ use bevy::{
     render::texture::{ImageLoaderSettings, ImageSampler},
 };
 
-use crate::{asset_tracking::LoadResource, screens::Area};
+use crate::{
+    asset_tracking::LoadResource,
+    screens::{Area, Screen},
+};
 
 use super::{inventory::Item, wife::spawn_wife};
 
@@ -15,24 +18,42 @@ pub(super) fn plugin(app: &mut App) {
     app.register_type::<Level>();
     app.init_resource::<Level>();
 
+    app.add_systems(OnEnter(Screen::Gameplay), |mut commands: Commands| {
+        commands.insert_resource(Level::default())
+    });
+
     app.add_systems(
         OnEnter(Area::Cave),
-        |mut commands: Commands, level: Res<Level>| {
+        |mut commands: Commands, level: Res<Level>, items: Query<(Entity, &Item), With<Sprite>>| {
             commands.add(|w: &mut World| {
                 SpawnBackground { area: Area::Cave }.apply(w);
                 w.run_system_once(spawn_wife);
             });
-            for item in &level.items {
-                if item == &Item::Knife {
-                    let item = *item;
+
+            for (item, translation, rotation) in [
+                (
+                    Item::Knife,
+                    Vec3::new(295.0, -130.0, -25.0),
+                    180.0f32.to_radians(),
+                ),
+                (Item::BurntBanana, Vec3::new(0.0, -130.0, 55.0), 0.0),
+            ] {
+                let spawned = items.iter().find(|(_, i)| i == &&item).map(|(e, _)| e);
+                let should_have = level.items.contains(&item);
+                if spawned.is_none() && should_have {
                     commands.add(move |w: &mut World| {
                         SpawnItem {
                             item,
-                            transform: Transform::from_translation(Vec3::new(130.0, -157.0, -25.0))
-                                .with_scale(Vec3::splat(8.0)),
+                            transform: Transform::from_translation(translation)
+                                .with_scale(Vec3::splat(8.0))
+                                .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, rotation)),
                         }
                         .apply(w);
                     });
+                } else if !should_have {
+                    if let Some(entity) = spawned {
+                        commands.entity(entity).despawn_recursive();
+                    }
                 }
             }
         },
@@ -43,21 +64,30 @@ pub(super) fn plugin(app: &mut App) {
         (|mut commands: Commands,
           level: Res<Level>,
           items: Query<(Entity, &Item), With<Sprite>>| {
-            let (item, translation) = (Item::Knife, Vec3::new(130.0, -157.0, -25.0));
-            let spawned = items.iter().find(|(_, i)| i == &&item).map(|(e, _)| e);
-            let should_have = level.items.contains(&item);
-            if spawned.is_none() && should_have {
-                commands.add(move |w: &mut World| {
-                    SpawnItem {
-                        item,
-                        transform: Transform::from_translation(translation)
-                            .with_scale(Vec3::splat(8.0)),
+            for (item, translation, rotation) in [
+                (
+                    Item::Knife,
+                    Vec3::new(295.0, -130.0, -25.0),
+                    180.0f32.to_radians(),
+                ),
+                (Item::BurntBanana, Vec3::new(0.0, -130.0, 55.0), 0.0),
+            ] {
+                let spawned = items.iter().find(|(_, i)| i == &&item).map(|(e, _)| e);
+                let should_have = level.items.contains(&item);
+                if spawned.is_none() && should_have {
+                    commands.add(move |w: &mut World| {
+                        SpawnItem {
+                            item,
+                            transform: Transform::from_translation(translation)
+                                .with_scale(Vec3::splat(8.0))
+                                .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, rotation)),
+                        }
+                        .apply(w);
+                    });
+                } else if !should_have {
+                    if let Some(entity) = spawned {
+                        commands.entity(entity).despawn_recursive();
                     }
-                    .apply(w);
-                });
-            } else if !should_have {
-                if let Some(entity) = spawned {
-                    commands.entity(entity).despawn_recursive();
                 }
             }
         })
@@ -175,9 +205,14 @@ pub struct LevelAssets {
     #[dependency]
     pub paper: Handle<Image>,
     #[dependency]
+    pub written_paper: Handle<Image>,
+    #[dependency]
     pub banana: Handle<Image>,
     #[dependency]
     pub burnt_banana: Handle<Image>,
+
+    #[dependency]
+    pub dino_stomp: Handle<AudioSource>,
 }
 
 impl LevelAssets {
@@ -190,9 +225,11 @@ impl LevelAssets {
     pub const PATH_KNIFE: &'static str = "images/knife.png";
     pub const PATH_WOVEN: &'static str = "images/papyrus_woven.png";
     pub const PATH_PAPER: &'static str = "images/paper.png";
+    pub const PATH_WRITTEN_PAPER: &'static str = "images/paper_written.png";
     pub const PATH_STRIPS: &'static str = "images/papyrus_strips.png";
     pub const PATH_BANANA: &'static str = "images/banan.png";
-    pub const PATH_BURNT_BANANA: &'static str = "images/banan.png";
+    pub const PATH_BURNT_BANANA: &'static str = "images/banan_burnt.png";
+    pub const PATH_DINO_STOMP: &'static str = "audio/sound_effects/stomp.ogg";
 }
 
 impl FromWorld for LevelAssets {
@@ -259,6 +296,12 @@ impl FromWorld for LevelAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
+            written_paper: assets.load_with_settings(
+                LevelAssets::PATH_WRITTEN_PAPER,
+                |settings: &mut ImageLoaderSettings| {
+                    settings.sampler = ImageSampler::nearest();
+                },
+            ),
             banana: assets.load_with_settings(
                 LevelAssets::PATH_BANANA,
                 |settings: &mut ImageLoaderSettings| {
@@ -271,6 +314,7 @@ impl FromWorld for LevelAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
+            dino_stomp: assets.load(LevelAssets::PATH_DINO_STOMP),
         }
     }
 }
@@ -313,7 +357,7 @@ fn spawn_background(
             },
             ..Default::default()
         },
-        StateScoped(config.area.clone()),
+        StateScoped(config.area),
     ));
 
     commands.spawn((
@@ -332,7 +376,7 @@ fn spawn_background(
             },
             ..Default::default()
         },
-        StateScoped(config.area.clone()),
+        StateScoped(config.area),
     ));
 
     if config.area == Area::Outside {
@@ -377,12 +421,12 @@ fn spawn_item(
                 Item::WovenPapyrus => level_assets.woven_papyrus.clone(),
                 Item::Paper => level_assets.paper.clone(),
                 Item::Banana => level_assets.banana.clone(),
-                Item::BurntBanana => level_assets.banana.clone(),
+                Item::BurntBanana => level_assets.burnt_banana.clone(),
                 _ => todo!("no sprite for {}", config.item.to_string()),
             },
             transform: config.transform,
             ..Default::default()
         },
-        StateScoped(state.get().clone()),
+        StateScoped(*state.get()),
     ));
 }

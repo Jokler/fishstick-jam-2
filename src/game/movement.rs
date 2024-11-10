@@ -33,6 +33,10 @@ pub(super) fn plugin(app: &mut App) {
             .in_set(AppSet::Update)
             .run_if(in_state(Screen::Gameplay)),
     );
+
+    app.add_systems(OnEnter(Screen::Difficulty), |mut commands: Commands| {
+        commands.insert_resource(ActionsFrozen::default())
+    });
 }
 
 /// These are the movement parameters for our character controller.
@@ -86,23 +90,6 @@ fn change_level(
         } else if transform.translation.x < -half_width {
             transform.translation.x = half_width;
             next_state.set(Area::Cave);
-        }
-    }
-}
-
-fn _clamp_player_y(
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    mut player_query: Query<&mut Transform, With<Player>>,
-) {
-    let Ok(window) = window_query.get_single() else {
-        return;
-    };
-    let half_width = window.size().y / 2.0 - 50.0;
-    for mut transform in &mut player_query {
-        if transform.translation.y < -half_width {
-            transform.translation.y = -half_width;
-        } else if transform.translation.y > half_width {
-            transform.translation.y = half_width;
         }
     }
 }
