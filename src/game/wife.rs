@@ -70,7 +70,6 @@ pub fn spawn_wife(
 }
 
 fn talk(
-    // mut gizmos: Gizmos,
     mut commands: Commands,
     input: Res<ButtonInput<KeyCode>>,
     player: Query<(&Aabb, &Transform), With<Player>>,
@@ -90,7 +89,6 @@ fn talk(
                 item_transform.translation.xy(),
                 item_aabb.half_extents.xy() * item_transform.scale.xy(),
             );
-            // gizmos.rect_2d(item_aabb2d.center(), 0., item_aabb2d.half_size() * 2., BLUE);
             if player_aabb2d.intersects(&item_aabb2d) {
                 if !input.just_pressed(KeyCode::KeyE) {
                     return;

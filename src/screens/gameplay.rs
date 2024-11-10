@@ -17,13 +17,6 @@ pub(super) fn plugin(app: &mut App) {
         (stop_ambience, play_outside_ambience).chain(),
     );
     app.add_systems(OnExit(Screen::Gameplay), stop_ambience);
-
-    // TODO: Pause screen?
-    // app.add_systems(
-    //     Update,
-    //     return_to_title_screen
-    //         .run_if(in_state(Screen::Gameplay).and_then(input_just_pressed(KeyCode::Escape))),
-    // );
 }
 
 #[derive(Resource, Asset, Reflect, Clone)]

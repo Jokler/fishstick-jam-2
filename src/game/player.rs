@@ -29,10 +29,9 @@ pub(super) fn plugin(app: &mut App) {
     // Record directional input as movement controls.
     app.add_systems(
         Update,
-        (
-            record_player_directional_input.in_set(AppSet::RecordInput),
-            auto_run.in_set(AppSet::RecordInput),
-        ),
+        (record_player_directional_input, auto_run)
+            .chain()
+            .in_set(AppSet::RecordInput),
     );
 }
 
@@ -137,6 +136,8 @@ pub struct PlayerAssets {
     pub caveman: Handle<Image>,
     #[dependency]
     pub healthbar: Handle<Image>,
+    #[dependency]
+    pub paper_big: Handle<Image>,
 
     #[dependency]
     pub item_pickup: Handle<AudioSource>,
@@ -147,20 +148,28 @@ pub struct PlayerAssets {
     #[dependency]
     pub trophy_wife: Handle<AudioSource>,
     #[dependency]
-    pub steps: Vec<Handle<AudioSource>>,
+    pub wife_hm: Handle<AudioSource>,
+    #[dependency]
+    pub run_outside: Handle<AudioSource>,
+    #[dependency]
+    pub run_cave: Handle<AudioSource>,
+
+    #[dependency]
+    pub animal_font: Handle<Font>,
 }
 
 impl PlayerAssets {
     pub const PATH_CAVEMAN: &'static str = "images/caveman.png";
     pub const PATH_HEALTHBAR: &'static str = "images/health_bar.png";
+    pub const PATH_PAPER_BIG: &'static str = "images/paper_big.png";
     pub const PATH_ITEM_PICKUP: &'static str = "audio/sound_effects/item_pickup.ogg";
     pub const PATH_VINE_BOOM: &'static str = "audio/sound_effects/vine_boom.ogg";
     pub const PATH_UH_OH: &'static str = "audio/sound_effects/uh_oh.ogg";
     pub const PATH_TROPHY_WIFE: &'static str = "audio/sound_effects/trophy_wife.ogg";
-    pub const PATH_STEP_1: &'static str = "audio/sound_effects/step1.ogg";
-    pub const PATH_STEP_2: &'static str = "audio/sound_effects/step2.ogg";
-    pub const PATH_STEP_3: &'static str = "audio/sound_effects/step3.ogg";
-    pub const PATH_STEP_4: &'static str = "audio/sound_effects/step4.ogg";
+    pub const PATH_WIFE_HM: &'static str = "audio/sound_effects/wife_hm.ogg";
+    pub const PATH_RUN_OUTSIDE: &'static str = "audio/sound_effects/run_outside.ogg";
+    pub const PATH_RUN_CAVE: &'static str = "audio/sound_effects/run_cave.ogg";
+    pub const PATH_ANIMAL_FONT: &'static str = "fonts/Animal-Alphabet-Regular.ttf";
 }
 
 impl FromWorld for PlayerAssets {
@@ -181,36 +190,50 @@ impl FromWorld for PlayerAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
+            paper_big: assets.load_with_settings(
+                PlayerAssets::PATH_PAPER_BIG,
+                |settings: &mut ImageLoaderSettings| {
+                    // Use `nearest` image sampling to preserve the pixel art style.
+                    settings.sampler = ImageSampler::nearest();
+                },
+            ),
             item_pickup: assets.load(PlayerAssets::PATH_ITEM_PICKUP),
             vine_boom: assets.load(PlayerAssets::PATH_VINE_BOOM),
             uh_oh: assets.load(PlayerAssets::PATH_UH_OH),
             trophy_wife: assets.load(PlayerAssets::PATH_TROPHY_WIFE),
-            steps: vec![
-                assets.load(PlayerAssets::PATH_STEP_1),
-                assets.load(PlayerAssets::PATH_STEP_2),
-                assets.load(PlayerAssets::PATH_STEP_3),
-                assets.load(PlayerAssets::PATH_STEP_4),
-            ],
+            wife_hm: assets.load(PlayerAssets::PATH_WIFE_HM),
+
+            run_outside: assets.load(PlayerAssets::PATH_RUN_OUTSIDE),
+            run_cave: assets.load(PlayerAssets::PATH_RUN_CAVE),
+            animal_font: assets.load(PlayerAssets::PATH_ANIMAL_FONT),
         }
     }
 }
 
 #[derive(Component, Debug)]
 pub struct AutoRunner {
-    pub start_elapsed: Duration,
-    pub time: Duration,
+    pub end_position: f32,
     pub intent: Vec2,
 }
 
 fn auto_run(
     mut commands: Commands,
-    time: Res<Time>,
-    mut controllers: Query<(Entity, &mut MovementController, &AutoRunner)>,
+    mut controllers: Query<(
+        Entity,
+        &Transform,
+        &mut Sprite,
+        &mut MovementController,
+        &AutoRunner,
+    )>,
 ) {
-    for (entity, mut controller, runner) in &mut controllers {
-        if runner.start_elapsed + runner.time < time.elapsed() {
+    for (entity, transform, mut sprite, mut controller, runner) in &mut controllers {
+        let go_left = runner.intent.x < 0.0;
+        if go_left && transform.translation.x < runner.end_position
+            || !go_left && transform.translation.x > runner.end_position
+        {
             controller.intent = Vec2::ZERO;
             commands.entity(entity).remove::<AutoRunner>();
+            sprite.flip_x = false;
 
             continue;
         }

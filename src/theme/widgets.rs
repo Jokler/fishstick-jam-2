@@ -10,13 +10,15 @@ pub trait Widgets {
     fn button(&mut self, text: impl Into<String>) -> EntityCommands;
 
     /// Spawn a simple button with image.
-    fn inventory_item(&mut self, image: Handle<Image>) -> EntityCommands;
+    fn inventory_item(&mut self, image: Handle<Image>, height: f32) -> EntityCommands;
 
     /// Spawn a simple header label. Bigger than [`Widgets::label`].
     fn header(&mut self, text: impl Into<String>) -> EntityCommands;
 
     /// Spawn a simple text label.
     fn label(&mut self, text: impl Into<String>) -> EntityCommands;
+
+    fn big_label(&mut self, text: impl Into<String>) -> EntityCommands;
 }
 
 impl<T: Spawn> Widgets for T {
@@ -57,7 +59,7 @@ impl<T: Spawn> Widgets for T {
         entity
     }
 
-    fn inventory_item(&mut self, image: Handle<Image>) -> EntityCommands {
+    fn inventory_item(&mut self, image: Handle<Image>, height: f32) -> EntityCommands {
         let mut entity = self.spawn((
             Name::new("Button"),
             ButtonBundle {
@@ -82,7 +84,8 @@ impl<T: Spawn> Widgets for T {
                 NodeBundle {
                     style: Style {
                         width: Val::Px(50.0),
-                        // height: Val::Px(50.0),
+                        height: Val::Px(height),
+                        margin: UiRect::top(Val::Px((60.0 - height) / 2.0)),
                         ..default()
                     },
                     ..default()
@@ -136,6 +139,26 @@ impl<T: Spawn> Widgets for T {
                     ..default()
                 },
             )
+            .with_style(Style {
+                width: Px(500.0),
+                ..default()
+            }),
+        ));
+        entity
+    }
+
+    fn big_label(&mut self, text: impl Into<String>) -> EntityCommands {
+        let entity = self.spawn((
+            Name::new("Label"),
+            TextBundle::from_section(
+                text,
+                TextStyle {
+                    font_size: 40.0,
+                    color: LABEL_TEXT,
+                    ..default()
+                },
+            )
+            .with_text_justify(JustifyText::Center)
             .with_style(Style {
                 width: Px(500.0),
                 ..default()

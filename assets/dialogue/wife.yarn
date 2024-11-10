@@ -1,18 +1,51 @@
 title: Wife
 ---
+<<declare $asked_for_plant = false>>
+<<if not $asked_for_plant>>
+    Mah wife!
+    <<play_sound wife_hm>>
+    Wife: Did you hunt plant?
+    Hunt plant! Remember!
+    <<set $asked_for_plant to true>>
+    <<stop>>
+<<endif>>
+
+<<if $_has_WrittenPaper>>
+    Wife: Thanks, I can't read though...
+    <<end_game>>
+    <<stop>>
+<<endif>>
+
+<<declare $talked_banana = false>>
 <<if $_has_PapyrusStrips>>
-    <<play_sound trophy_wife>>
-    Wife: What's that?
-    Wife: Can I have it for a moment?
+    <<play_sound wife_hm>>
+    Wife: What that?
+    Wife: Give me? I make cloth.
     <<inventory_convert PapyrusStrips WovenPapyrus>>
+    <<stop>>
+<<endif>>
+
+<<if $_has_BurntBanana and not $talked_banana>>
+     I made banana mistake. Use?
+    <<play_sound wife_hm>>
+     Wife: Man write with this.
+    <<set $learned_pen to true>>
+    <<set $talked_banana to true>>
 <<else>>
+    <<set $talked_banana to false>>
     Mah wife!
     <<if $_has_Knife>>
-        Should I stab her?
+    <<declare $trophy_played = false>>
+    <<if $trophy_played == false>>
+        <<play_sound trophy_wife>>
+        <<set $trophy_played to true>>
+    <<endif>>
+        Stab wife?
         -> Yes
             <<play_sound vine_boom>>
-            It would make me feel better but I think I still need her
-        -> Not yet
+            Me think me need wife. Wife gone, regret.
+        -> Not
+           Maybe later...
     <<endif>>
 <<endif>>
 ===
